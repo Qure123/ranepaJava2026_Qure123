@@ -15,6 +15,6 @@ public class EmployeeService {
             Employee employee = allEmployees.iterator().next();
             sumSalary = sumSalary.add(employee.getSalary());
         }
-        return sumSalary.divide(allEmployees.)
+        //return sumSalary.divide(allEmployees.);
     }
 }
