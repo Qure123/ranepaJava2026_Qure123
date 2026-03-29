@@ -6,6 +6,7 @@ import ru.ranepa.repository.EmployeeRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,7 +19,7 @@ public final class EmployeeService {
         this.repository = repository;
     }
     public BigDecimal calculateAverageSalary() { //расчет средней зп
-        List<Employee> employees = toList(repository.findAll());
+        List<Employee> employees = new ArrayList<>(repository.findAll());
         if (employees.isEmpty()) {
             return BigDecimal.ZERO;
         }
@@ -32,18 +33,9 @@ public final class EmployeeService {
                 RoundingMode.HALF_UP
         );
     }
-    public Optional<Employee> findTopEarner() { //поиск самого высокооплачиваемого сотрудника
-        List<Employee> employees = toList(repository.findAll());
-        if (employees.isEmpty()) {
-            return Optional.empty();
-        }
-        Employee top = employees.get(0);
-        for (Employee emp : employees) {
-            if (emp.getSalary().compareTo(top.getSalary()) > 0) {
-                top = emp;
-            }
-        }
-        return Optional.of(top);
+    public Optional<Employee> findTopEarner() {//поиск самого высокооплачиваемого сотрудника
+        return repository.findAll().stream()
+                .max(Comparator.comparing(Employee::getSalary));
     }
     public List<Employee> filterByPosition(String position) {//фильтрация сотрудников по должности
         List<Employee> result = new ArrayList<>();
@@ -57,11 +49,16 @@ public final class EmployeeService {
         }
         return result;
     }
-    private List<Employee> toList(Iterable<Employee> iterable) {
-        List<Employee> list = new ArrayList<>();
-        for (Employee emp : iterable) {
-            list.add(emp);
+    public int getEmployeeCount() {//общее количество сотрудников
+        int count = 0;
+        for (Employee ignored : repository.findAll()) {
+            count++;
         }
-        return list;
+        return count;
+    }
+    public List<Employee> sortByHireDate() { //сортировка по дате приема
+        List<Employee> employees = new ArrayList<>(repository.findAll());
+        employees.sort(Comparator.comparing(Employee::getHireDate));
+        return employees;
     }
 }
