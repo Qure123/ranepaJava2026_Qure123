@@ -3,18 +3,29 @@ package ru.ranepa.model;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-public class Employee {
+public final class Employee {
     private Long id;
-    private String name;
-    private String position;
-    private BigDecimal salary;
-    private LocalDate hireDate;
+    private final String name;
+    private final String position;
+    private final BigDecimal salary;
+    private final LocalDate hireDate;
     // Alt + insert - создание конструктора, alt+enter - подсказка
-
     public Employee(String name, String position, double salary, LocalDate hireDate) {
-        this.name = name;
-        this.position = position;
-        this.salary = BigDecimal.valueOf(salary); // обертка над числом
+        if (name == null || name.trim().isEmpty()) {
+            throw new IllegalArgumentException("Name must not be null");
+        }
+        if (position == null || position.trim().isEmpty()) {
+            throw new IllegalArgumentException("Position must not be null");
+        }
+        if (salary <= 0) {
+            throw new IllegalArgumentException("Salary must be positive");
+        }
+        if (hireDate == null) {
+            throw new IllegalArgumentException("Hire date must not be null");
+        }
+        this.name = name.trim();
+        this.position = position.trim();
+        this.salary = BigDecimal.valueOf(salary);
         this.hireDate = hireDate;
     }
     // toString() - в текст виде выводит в консоль данные объекта
@@ -28,44 +39,22 @@ public class Employee {
                 ", hireDate=" + hireDate +
                 '}';
     }
-
     public Long getId() {
         return id;
     }
-
     public void setId(Long id) {
         this.id = id;
     }
-
     public String getName() {
         return name;
     }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
     public String getPosition() {
         return position;
     }
-
-    public void setPosition(String position) {
-        this.position = position;
-    }
-
     public BigDecimal getSalary() {
         return salary;
     }
-
-    public void setSalary(BigDecimal salary) {
-        this.salary = salary;
-    }
-
     public LocalDate getHireDate() {
         return hireDate;
-    }
-
-    public void setHireDate(LocalDate hireDate) {
-        this.hireDate = hireDate;
     }
 }

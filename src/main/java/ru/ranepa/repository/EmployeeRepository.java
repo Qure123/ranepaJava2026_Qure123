@@ -1,8 +1,7 @@
 package ru.ranepa.repository;
 
 import ru.ranepa.model.Employee;
-
-import java.util.Optional; // если найдено, то работает. не найдено - сообщит, обертка для null
+import java.util.Optional; // Если найдено, то работает. Не найдено - сообщит, обертка для null
 
 public interface EmployeeRepository {
     String save(Employee employee);
