@@ -13,7 +13,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Scanner;
 
-public final class HrmApplication {
+public class HrmApplication {
     private static final String MENU_TITLE = "=== HRM System Menu ===";
     private static final String PROMPT_CHOICE = "Choose an option: ";
     private static final String PROMPT_NAME = "Enter name: ";
@@ -22,30 +22,42 @@ public final class HrmApplication {
     private static final String PROMPT_DATE = "Enter hire date (YYYY-MM-DD): ";
     private static final String PROMPT_ID = "Enter employee ID: ";
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ISO_LOCAL_DATE;
+    private final Scanner scanner;
+    private final EmployeeRepository repository;
+    private final EmployeeService service;
+    public HrmApplication(EmployeeRepository repository, EmployeeService service) {
+        this.scanner = new Scanner(System.in);  // Scanner создаётся здесь
+        this.repository = repository;
+        this.service = service;
+    }
+    //вынести сканнер и репозиторий и сервис - убрать из методов
     public static void main(String[] args) {
         EmployeeRepository repository = new EmployeeRepositoryImpl();
         EmployeeService service = new EmployeeService(repository);
-        try (Scanner scanner = new Scanner(System.in)) {
-            boolean running = true;
-            while (running) {
-                printMenu();
-                int choice = readChoice(scanner);
-                switch (choice) {
-                    case 1 -> showAllEmployees(repository);
-                    case 2 -> addEmployee(scanner, repository);
-                    case 3 -> deleteEmployee(scanner, repository);
-                    case 4 -> findEmployee(scanner, repository);
-                    case 5 -> showStatistics(service);
-                    case 6 -> showSortedEmployees(service.sortByHireDate());
-                    case 7 -> filterEmployeesByPosition(scanner, service);
-                    case 8 -> exportToCsv(scanner, repository);
-                    case 9 -> { running = false; System.out.println("Goodbye!"); }
-                    default -> System.out.println("Invalid option, try again");
-                }
+        HrmApplication app = new HrmApplication(repository, service);
+        app.run();
+    }
+    public void run() {
+        boolean running = true;
+        while (running) {
+            printMenu();
+            int choice = readChoice();
+            switch (choice) {
+                case 1 -> showAllEmployees();
+                case 2 -> addEmployee();
+                case 3 -> deleteEmployee();
+                case 4 -> findEmployee();
+                case 5 -> showStatistics();
+                case 6 -> showSortedEmployees(service.sortByHireDate());
+                case 7 -> filterEmployeesByPosition();
+                case 8 -> exportToCsv();
+                case 9 -> { running = false; System.out.println("Goodbye!"); }
+                default -> System.out.println("Invalid option, try again");
             }
         }
+        scanner.close();
     }
-    private static void printMenu () {
+    private void printMenu () {
         System.out.println("\n" + MENU_TITLE);
         System.out.println("1. Show all employees");
         System.out.println("2. Add employee");
@@ -58,17 +70,18 @@ public final class HrmApplication {
         System.out.println("9. Exit");
         System.out.print(PROMPT_CHOICE);
     }
-    private static int readChoice(Scanner scanner) {
+    private int readChoice() {
         try {
             return Integer.parseInt(scanner.nextLine().trim());
         } catch (NumberFormatException e) {
+            System.out.println("Invalid number format");
             return -1;  // невалидный ввод
         }
     }
-    private static void showAllEmployees(EmployeeRepository repo) {
+    private void showAllEmployees() {
         System.out.println("\nAll employees:");
         boolean found = false;
-        for (Employee emp : repo.findAll()) {
+        for (Employee emp : repository.findAll()) {
             System.out.println(emp);
             found = true;
         }
@@ -77,7 +90,8 @@ public final class HrmApplication {
             System.out.println("No employees found");
         }
     }
-    private static void addEmployee(Scanner scanner, EmployeeRepository repo) {
+    // добавление и удаление перетащить на уровне сервиса
+    private void addEmployee() {
         try {
             System.out.print(PROMPT_NAME);
             String name = scanner.nextLine();
@@ -88,7 +102,7 @@ public final class HrmApplication {
             System.out.print(PROMPT_DATE);
             LocalDate hireDate = LocalDate.parse(scanner.nextLine().trim(), DATE_FORMAT);
             Employee emp = new Employee(name, position, salary, hireDate);
-            String result = repo.save(emp);
+            String result = service.addEmployee(emp);
             System.out.println(result);
         } catch (NumberFormatException e) {
             System.out.println("Invalid salary format. Please enter a number.");
@@ -98,22 +112,22 @@ public final class HrmApplication {
             System.out.println(e.getMessage());
         }
     }
-    private static void deleteEmployee(Scanner scanner, EmployeeRepository repo) {
+    private void deleteEmployee() {
         try {
             System.out.print(PROMPT_ID);
             Long id = Long.parseLong(scanner.nextLine().trim());
-            String result = repo.delete(id);
+            String result = service.removeEmployee(id);
             System.out.println(result);
         } catch (NumberFormatException e) {
             System.out.println("Invalid ID format. Please enter a number.");
         }
     }
-    private static void findEmployee(Scanner scanner, EmployeeRepository repo) {
+    private void findEmployee() {
         try {
             System.out.print(PROMPT_ID);
             Long id = Long.parseLong(scanner.nextLine().trim());
-            if (repo.findById(id).isPresent()) {
-                System.out.println("Found: " + repo.findById(id).get());
+            if (service.findEmployeeById(id).isPresent()) {
+                System.out.println("Found: " + service.findEmployeeById(id).get());
             } else {
                 System.out.println("Employee not found");
             }
@@ -121,7 +135,7 @@ public final class HrmApplication {
             System.out.println("Invalid ID format. Please enter a number.");
         }
     }
-    private static void showStatistics(EmployeeService service) {
+    private void showStatistics() {
         System.out.println("\nCompany Statistics");
         System.out.println("Total employees: " + service.getEmployeeCount());
         BigDecimal avg = service.calculateAverageSalary();
@@ -133,7 +147,7 @@ public final class HrmApplication {
             System.out.println("No employees to analyze");
         }
     }
-    private static void showSortedEmployees(Collection<Employee> employees) {
+    private void showSortedEmployees(Collection<Employee> employees) {
         System.out.println("\nEmployees sorted " + "by hire date (old→new)" + ":");
         if (employees.isEmpty()) {
             System.out.println("No employees found");
@@ -144,7 +158,7 @@ public final class HrmApplication {
             System.out.println(index++ + ". " + emp);
         }
     }
-    private static void filterEmployeesByPosition(Scanner scanner, EmployeeService service) {
+    private void filterEmployeesByPosition() {
         System.out.print("Enter position to filter (e.g., Developer): ");
         String position = scanner.nextLine().trim();
         List<Employee> filtered = service.filterByPosition(position);
@@ -159,13 +173,13 @@ public final class HrmApplication {
         }
         System.out.println("Total: " + filtered.size() + " employee(s)");
     }
-    private static void exportToCsv(Scanner scanner, EmployeeRepository repo) {
+    private void exportToCsv() {
         System.out.print("Enter file path (e.g., employees.csv): ");
         String filePath = scanner.nextLine().trim();
         if (filePath.isEmpty()) {
             filePath = "employees.csv";
         }
-        String result = repo.exportToCsv(filePath);
+        String result = repository.exportToCsv(filePath);
         System.out.println(result);
     }
 }

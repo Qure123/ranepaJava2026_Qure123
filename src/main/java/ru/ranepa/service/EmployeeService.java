@@ -6,6 +6,7 @@ import ru.ranepa.repository.EmployeeRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -18,8 +19,17 @@ public final class EmployeeService {
         }
         this.repository = repository;
     }
+    public String addEmployee(Employee employee) {
+        return repository.save(employee);
+    }
+    public String removeEmployee(Long id) {
+        return repository.delete(id);
+    }
+    public Optional<Employee> findEmployeeById(Long id) {
+        return repository.findById(id);
+    }
     public BigDecimal calculateAverageSalary() { //расчет средней зп
-        List<Employee> employees = new ArrayList<>(repository.findAll());
+        Collection<Employee> employees = repository.findAll();
         if (employees.isEmpty()) {
             return BigDecimal.ZERO;
         }

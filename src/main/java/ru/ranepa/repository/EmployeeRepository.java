@@ -8,6 +8,7 @@ import java.util.Optional; // Если найдено, то работает. Н
 public interface EmployeeRepository {
     String save(Employee employee);
     Optional<Employee> findById(Long id);
+    // вернуть лист
     Collection<Employee> findAll();
     String delete(Long id);
     String exportToCsv(String filePath);

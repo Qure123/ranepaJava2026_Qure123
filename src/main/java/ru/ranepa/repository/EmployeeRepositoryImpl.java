@@ -29,7 +29,7 @@ public class EmployeeRepositoryImpl implements EmployeeRepository{
 
     @Override
     public Collection<Employee> findAll() {
-        return new ArrayList<>(employees.values());
+        return new ArrayList<>(employees.values()); //просто возвращать лист, без обертки
     }
 
     @Override
